@@ -1,6 +1,7 @@
-'''Возвращение текста'''
+"""Возвращение текста"""
+
+
 def text():
-    '''Также переменную message'''
-    message = input()
-    m = message
+    """Также переменную message"""
+    m = "message"
     return m
