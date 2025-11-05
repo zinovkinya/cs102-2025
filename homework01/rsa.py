@@ -12,13 +12,8 @@ def is_prime(n: int) -> bool:
     >>> is_prime(8)
     False
     """
-    if n <= 1:
-        return False
-    for i in range(2, int(n ** 0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
+    # PUT YOUR CODE HERE
+    pass
 
 
 def gcd(a: int, b: int) -> int:
@@ -41,19 +36,8 @@ def multiplicative_inverse(e: int, phi: int) -> int:
     >>> multiplicative_inverse(7, 40)
     23
     """
-    def extended_gcd(a, b):
-        if b == 0:
-            return a, 1, 0
-        gcd_value, x1, y1 = extended_gcd(b, a % b)
-        x = y1
-        y = x1 - (a // b) * y1
-        return gcd_value, x, y
-
-    gcd_value, x, _ = extended_gcd(e, phi)
-    if gcd_value != 1:
-        raise Exception('Inverse does not exist')
-    else:
-        return x % phi
+    # PUT YOUR CODE HERE
+    pass
 
 
 def generate_keypair(p: int, q: int) -> tp.Tuple[tp.Tuple[int, int], tp.Tuple[int, int]]:
@@ -99,7 +83,7 @@ def decrypt(pk: tp.Tuple[int, int], ciphertext: tp.List[int]) -> str:
     # Unpack the key into its components
     key, n = pk
     # Generate the plaintext based on the ciphertext and key using a^b mod m
-    plain = [chr((char ** key) % n) for char in ciphertext]
+    plain = [chr((char**key) % n) for char in ciphertext]
     # Return the array of bytes as a string
     return "".join(plain)
 
