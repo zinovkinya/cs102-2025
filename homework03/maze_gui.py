@@ -1,4 +1,5 @@
 import tkinter as tk
+from copy import deepcopy
 from tkinter import messagebox, ttk
 from typing import List
 
@@ -13,15 +14,18 @@ def draw_cell(x, y, color, size: int = 10):
     canvas.create_rectangle(x, y, x1, y1, fill=color)
 
 
-def draw_maze(grid: List[List[str]], size: int = 10):
+def draw_maze(grid: List[List[str | int]], size: int = 10):
     for x, row in enumerate(grid):
         for y, cell in enumerate(row):
             if cell == " ":
                 color = "White"
+                color = "White"
             elif cell == "■":
+                color = "black"
                 color = "black"
             elif cell == "X":
                 color = "red"
+                color = "green"
             draw_cell(y, x, color, size)
 
 
@@ -31,7 +35,7 @@ def show_solution():
     if path:
         draw_maze(maze, CELL_SIZE)
     else:
-        tk.messagebox.showinfo("Message", "No solutions")
+        messagebox.showinfo("Message", "No solutions")
 
 
 if __name__ == "__main__":
@@ -40,6 +44,11 @@ if __name__ == "__main__":
 
     CELL_SIZE = 10
     GRID = bin_tree_maze(N, M)
+
+    trying_grid = bin_tree_maze(N, M)
+    while not solve_maze(deepcopy(trying_grid))[1]:
+        try_grid = bin_tree_maze(N, M)
+    GRID = trying_grid
 
     window = tk.Tk()
     window.title("Maze")
