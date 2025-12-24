@@ -1,7 +1,12 @@
 import pathlib
+import random
 import typing as tp
+from itertools import product
 
 T = tp.TypeVar("T")
+
+SQUARE_SIZE = 9
+ALL_VALUES = [str(x) for x in range(1, 10)]
 
 
 def read_sudoku(path: tp.Union[str, pathlib.Path]) -> tp.List[tp.List[str]]:
@@ -23,9 +28,9 @@ def display(grid: tp.List[tp.List[str]]) -> None:
     """Вывод Судоку"""
     width = 2
     line = "+".join(["-" * (width * 3)] * 3)
-    for row in range(9):
-        print("".join(grid[row][col].center(width) + ("|" if str(col) in "25" else "") for col in range(9)))
-        if str(row) in "25":
+    for row in range(SQUARE_SIZE):
+        print("".join(grid[row][col].center(width) + ("|" if col in (2, 5) else "") for col in range(SQUARE_SIZE)))
+        if row in (2, 5):
             print(line)
     print()
 
@@ -115,7 +120,7 @@ def find_possible_values(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -
     block_vals = get_block(grid, pos)
 
     used_values = set(row_vals + col_vals + block_vals)
-    return set("123456789") - used_values
+    return set(ALL_VALUES) - used_values
 
 
 def solve(grid: tp.List[tp.List[str]]) -> tp.Optional[tp.List[tp.List[str]]]:
@@ -130,48 +135,44 @@ def solve(grid: tp.List[tp.List[str]]) -> tp.Optional[tp.List[tp.List[str]]]:
     >>> solve(grid)
     [['5', '3', '4', '6', '7', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']]
     """
+    empty_pos = find_empty_positions(grid)
 
-    for i in range(9):
-        for j in range(9):
-            if grid[i][j] == ".":
-                used = set(get_row(grid, (i, j)) + get_col(grid, (i, j)) + get_block(grid, (i, j)))
+    if empty_pos is None:
+        return grid
 
-                for value in [x for x in "123456789" if x not in used]:
-                    grid[i][j] = value
+    i, j = empty_pos
+    possible_values = find_possible_values(grid, (i, j))
 
-                    if solve(grid) is not None:
-                        return grid
+    for value in possible_values:
+        grid[i][j] = value
 
-                    grid[i][j] = "."
+        if solve(grid) is not None:
+            return grid
 
-                return None
-
-    return grid
+        grid[i][j] = "."
+    return None
 
 
 def check_solution(solution: tp.List[tp.List[str]]) -> bool:
     """Если решение solution верно, то вернуть True, в противном случае False"""
     # TODO: Add doctests with bad puzzles
-    for i in range(9):
+    for i in range(SQUARE_SIZE):
         row = get_row(solution, (i, 0))
-        if len(set(row)) != 9 or "." in row:
+        if len(set(row)) != SQUARE_SIZE or "." in row:
             return False
 
-    for j in range(9):
+    for j in range(SQUARE_SIZE):
         col = get_col(solution, (0, j))
-        if len(set(col)) != 9 or "." in col:
+        if len(set(col)) != SQUARE_SIZE or "." in col:
             return False
 
-    for i in range(0, 9, 3):
-        for j in range(0, 9, 3):
+    for i in range(0, SQUARE_SIZE, 3):
+        for j in range(0, SQUARE_SIZE, 3):
             block = get_block(solution, (i, j))
-            if len(set(block)) != 9 or "." in block:
+            if len(set(block)) != SQUARE_SIZE or "." in block:
                 return False
 
     return True
-
-
-import random
 
 
 def generate_sudoku(N: int) -> tp.List[tp.List[str]]:
@@ -195,27 +196,10 @@ def generate_sudoku(N: int) -> tp.List[tp.List[str]]:
     >>> check_solution(solution)
     True
     """
-    grid = [["." for _ in range(9)] for _ in range(9)]
-    solved = solve([row[:] for row in grid])
-
-    if solved is None:
-        solved = _create_full_grid()
-
-    positions = [(i, j) for i in range(9) for j in range(9)]
-    random.shuffle(positions)
-
-    for k in range(81 - N):
-        i, j = positions[k]
-        solved[i][j] = "."
-
-    return solved
-
-
-def _create_full_grid() -> tp.List[tp.List[str]]:
-    grid = [["." for _ in range(9)] for _ in range(9)]
+    grid = [["."] * SQUARE_SIZE for _ in range(SQUARE_SIZE)]
 
     for block in range(3):
-        numbers = list("123456789")
+        numbers = ALL_VALUES[:]
         random.shuffle(numbers)
         for i in range(3):
             for j in range(3):
@@ -223,8 +207,19 @@ def _create_full_grid() -> tp.List[tp.List[str]]:
                 col = block * 3 + j
                 grid[row][col] = numbers[i * 3 + j]
 
-    result = solve([row[:] for row in grid])
-    return result if result is not None else grid
+    solved = solve([row[:] for row in grid])
+
+    if solved is None:
+        return generate_sudoku(N)
+
+    positions = list(product(range(SQUARE_SIZE), repeat=2))
+    random.shuffle(positions)
+
+    for k in range(81 - N):
+        i, j = positions[k]
+        solved[i][j] = "."
+
+    return solved
 
 
 if __name__ == "__main__":
